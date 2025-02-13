@@ -1,27 +1,41 @@
 package handler
 
 import (
+	"content-filter/internal/Proxy"
 	"content-filter/internal/service"
 	"content-filter/models"
 	"net/http"
-	"net/http/httputil"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
-type ProxyHandler struct {
-	service *service.FilterService
-	proxy   *httputil.ReverseProxy
+type FilterHandler struct {
+	service service.FilterService
+	proxy   *proxy.ReverseProxy
 }
 
-func NewProxyHandler(service *service.FilterService) *ProxyHandler {
-	return &ProxyHandler{
+func NewFilterHandler(service service.FilterService, target string) *FilterHandler {
+	return &FilterHandler{
 		service: service,
-		proxy:   &httputil.ReverseProxy{Director: func(req *http.Request) {}},
+		proxy:   proxy.NewReverseProxy(target),
 	}
 }
 
-func (h *ProxyHandler) CreateBlockUrl(c *gin.Context) {
+func (h *FilterHandler) Middleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		allowed, reason := h.service.CheckRequest(r)
+		if !allowed {
+			logrus.Warnf("Blocked request to %s: %s", r.URL.String(), reason)
+			http.Error(w, reason, http.StatusForbidden)
+			return
+		}
+		
+		h.proxy.ServeHTTP(w, r)
+	})
+}
+
+func (h *FilterHandler) CreateBlockUrl(c *gin.Context) {
 	var request models.Filter_urls
 
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -38,19 +52,3 @@ func (h *ProxyHandler) CreateBlockUrl(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"id": id})
 }
 
-func (h *ProxyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	targetURL := r.URL.String()
-
-	allowed, err := h.service.CheckURL(targetURL)
-	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-
-	if !allowed {
-		http.Error(w, "Access to this URL is blocked", http.StatusForbidden)
-		return
-	}
-
-	h.proxy.ServeHTTP(w, r)
-}
