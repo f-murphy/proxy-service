@@ -22,23 +22,19 @@ func NewFilterHandler(service service.FilterService, target string) *FilterHandl
 	}
 }
 
-// Middleware обрабатывает запросы и блокирует их при необходимости
 func (h *FilterHandler) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Проверка запроса
 		allowed, reason := h.service.CheckRequest(r)
 		if !allowed {
 			logrus.Warnf("Blocked request: %s", reason)
 			http.Error(w, reason, http.StatusForbidden)
 			return
 		}
-		
-		// Проксируем запрос, если он разрешён
+
 		h.proxy.ServeHTTP(w, r)
 	})
 }
 
-// CreateBlockURLHandler добавляет URL в чёрный список
 func (h *FilterHandler) CreateBlockURLHandler(w http.ResponseWriter, r *http.Request) {
 	var filterURL models.Filter_urls
 	if err := json.NewDecoder(r.Body).Decode(&filterURL); err != nil {
@@ -58,7 +54,6 @@ func (h *FilterHandler) CreateBlockURLHandler(w http.ResponseWriter, r *http.Req
 	json.NewEncoder(w).Encode(map[string]string{"id": id})
 }
 
-// GetBlockURLsHandler возвращает список заблокированных URL
 func (h *FilterHandler) GetBlockURLsHandler(w http.ResponseWriter, r *http.Request) {
 	urls, err := h.service.GetBlockURLs(r.Context())
 	if err != nil {
@@ -71,7 +66,6 @@ func (h *FilterHandler) GetBlockURLsHandler(w http.ResponseWriter, r *http.Reque
 	json.NewEncoder(w).Encode(urls)
 }
 
-// GetBlacklistKeywordsHandler возвращает список запрещённых ключевых слов
 func (h *FilterHandler) GetBlacklistKeywordsHandler(w http.ResponseWriter, r *http.Request) {
 	keywords, err := h.service.GetBlacklistKeywords(r.Context())
 	if err != nil {

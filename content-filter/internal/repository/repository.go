@@ -28,9 +28,9 @@ func NewPostgreSQLFilterRepository(db *pgxpool.Pool) *PostgreSQLFilterRepository
 
 // CreateBlockURL добавляет URL в чёрный список
 func (r *PostgreSQLFilterRepository) CreateBlockURL(ctx context.Context, filterURL *models.Filter_urls) (string, error) {
-	query := "INSERT INTO filter_urls (id, url, action) VALUES ($1, $2, $3) RETURNING id"
+	query := "INSERT INTO filter_urls (id, url) VALUES ($1, $2) RETURNING id"
 	var id string
-	err := r.db.QueryRow(ctx, query, filterURL.ID, filterURL.Url, filterURL.Action).Scan(&id)
+	err := r.db.QueryRow(ctx, query, filterURL.ID, filterURL.Url).Scan(&id)
 	if err != nil {
 		return "", fmt.Errorf("unable to insert data: %w", err)
 	}
