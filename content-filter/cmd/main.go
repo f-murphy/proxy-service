@@ -4,7 +4,7 @@ import (
 	"content-filter/internal/handler"
 	"content-filter/internal/repository"
 	"content-filter/internal/service"
-	logger "content-filter/utils"
+	"content-filter/utils"
 	"context"
 	"fmt"
 	"net/http"
@@ -23,7 +23,8 @@ func main() {
 	if err != nil {
 		logrus.WithError(err).Fatal("Error loading .env file - ", err)
 	}
-	logFile, err := logger.InitLogger()
+
+	logFile, err := utils.InitLogger()
 	if err != nil {
 		logrus.WithError(err).Fatal("Error loading logrus")
 	}

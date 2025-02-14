@@ -1,15 +1,16 @@
 -- +goose Up
 -- +goose StatementBegin
-CREATE TABLE filter_urls (
-    id SERIAL PRIMARY KEY,
-    url TEXT NOT NULL
-);
-
 CREATE TABLE blacklist (
     id SERIAL PRIMARY KEY,
     type VARCHAR(10) NOT NULL CHECK (type IN ('url', 'keyword')),
     value VARCHAR(255) NOT NULL UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE blocked_ips (
+    id SERIAL PRIMARY KEY,
+    ip_address VARCHAR(50) NOT NULL UNIQUE,
+    blocked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 INSERT INTO blacklist (type, value) VALUES 
@@ -20,6 +21,6 @@ INSERT INTO blacklist (type, value) VALUES
 
 -- +goose Down
 -- +goose StatementBegin
-drop table filter_urls;
+drop table blocked_ips;
 drop table blacklist;
 -- +goose StatementEnd

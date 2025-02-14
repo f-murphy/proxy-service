@@ -1,12 +1,12 @@
 package handler
 
 import (
-	"content-filter/internal/Proxy"
+	"content-filter/internal/proxy"
 	"content-filter/internal/service"
 	"content-filter/models"
+	"encoding/json"
 	"net/http"
 
-	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 )
 
@@ -26,29 +26,54 @@ func (h *FilterHandler) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		allowed, reason := h.service.CheckRequest(r)
 		if !allowed {
-			logrus.Warnf("Blocked request to %s: %s", r.URL.String(), reason)
+			logrus.Warnf("Blocked request: %s", reason)
 			http.Error(w, reason, http.StatusForbidden)
 			return
 		}
-		
+
 		h.proxy.ServeHTTP(w, r)
 	})
 }
 
-func (h *FilterHandler) CreateBlockUrl(c *gin.Context) {
-	var request models.Filter_urls
-
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+func (h *FilterHandler) CreateBlockURLHandler(w http.ResponseWriter, r *http.Request) {
+	var filterURL models.Filter_urls
+	if err := json.NewDecoder(r.Body).Decode(&filterURL); err != nil {
+		logrus.Errorf("Error decoding request body: %v", err)
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
-	id, err := h.service.CreateBlockUrl(c.Request.Context(), &request)
+	id, err := h.service.CreateBlockURL(r.Context(), &filterURL)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		logrus.Errorf("Error creating block URL: %v", err)
+		http.Error(w, "Failed to create block URL", http.StatusInternalServerError)
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"id": id})
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]string{"id": id})
 }
 
+func (h *FilterHandler) GetBlockURLsHandler(w http.ResponseWriter, r *http.Request) {
+	urls, err := h.service.GetBlockURLs(r.Context())
+	if err != nil {
+		logrus.Errorf("Error getting blocked URLs: %v", err)
+		http.Error(w, "Failed to get blocked URLs", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(urls)
+}
+
+func (h *FilterHandler) GetBlacklistKeywordsHandler(w http.ResponseWriter, r *http.Request) {
+	keywords, err := h.service.GetBlacklistKeywords(r.Context())
+	if err != nil {
+		logrus.Errorf("Error getting blacklist keywords: %v", err)
+		http.Error(w, "Failed to get blacklist keywords", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(keywords)
+}
