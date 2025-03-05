@@ -4,7 +4,6 @@ import (
     "time"
 )
 
-// TrafficData представляет данные о сетевом трафике
 type TrafficData struct {
     SourceIP   string    `json:"source_ip"`
     DestIP     string    `json:"dest_ip"`
@@ -14,7 +13,6 @@ type TrafficData struct {
     Timestamp  time.Time `json:"timestamp"`
 }
 
-// Anomaly представляет информацию об обнаруженной аномалии
 type Anomaly struct {
     Detected bool   `json:"detected"`
     Type     string `json:"type"`
