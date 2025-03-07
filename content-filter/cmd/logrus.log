@@ -6,3 +6,7 @@
 {"level":"info","msg":"Checking request from IP: [::1]:57930","time":"2025-02-14T16:20:03+03:00"}
 {"level":"warning","msg":"Request from blocked IP: [::1]:57930","time":"2025-02-14T16:20:03+03:00"}
 {"level":"warning","msg":"Blocked request: Your IP is blocked.","time":"2025-02-14T16:20:03+03:00"}
+{"level":"info","msg":"logFile initialized successfully","time":"2025-03-07T12:51:52+03:00"}
+{"level":"info","msg":"Database connected successfully","time":"2025-03-07T12:51:52+03:00"}
+{"level":"info","msg":"logFile initialized successfully","time":"2025-03-07T12:56:00+03:00"}
+{"level":"info","msg":"Database connected successfully","time":"2025-03-07T12:56:00+03:00"}

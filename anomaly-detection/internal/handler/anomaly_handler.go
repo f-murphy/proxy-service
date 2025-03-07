@@ -9,11 +9,11 @@ import (
 )
 
 type AnomalyHandler struct {
-	service service.AnomalyService
+	service *service.AnomalyService
 	proxy   *proxy.ReverseProxy
 }
 
-func NewAnomalyHandler(service service.AnomalyService, target string) *AnomalyHandler {
+func NewAnomalyHandler(service *service.AnomalyService, target string) *AnomalyHandler {
 	return &AnomalyHandler{
 		service: service,
 		proxy:   proxy.NewReverseProxy(target),
@@ -28,7 +28,7 @@ func (h *AnomalyHandler) Middleware(next http.Handler) http.Handler {
 			http.Error(w, reason, http.StatusForbidden)
 			return
 		}
-		
+
 		h.proxy.ServeHTTP(w, r)
 	})
 }
