@@ -17,7 +17,6 @@ import (
 func main() {
 	dbURL := "postgres://postgres:postgres@localhost:5432/proxy-service?sslmode=disable"
 
-
 	fmt.Println("Connecting to DB:", dbURL)
 
 	dbpool, err := pgxpool.Connect(context.Background(), dbURL)
@@ -29,7 +28,7 @@ func main() {
 	trafficRepo := repository.NewPostgreSQLTrafficRepository(dbpool)
 	trafficService := service.NewTrafficService(trafficRepo)
 
-	target :="http://localhost:3000"
+	target := "http://localhost:8080"
 	proxyHandler, err := proxy.NewReverseProxy(target, trafficService)
 	if err != nil {
 		log.Fatalf("Failed to create proxy: %v", err)
@@ -40,7 +39,7 @@ func main() {
 	http.Handle("/metrics", promhttp.Handler())
 	http.Handle("/", proxyHandler)
 
-	port := ":8080"
+	port := ":8081"
 	fmt.Printf("Proxy server running on %s\n", port)
 	if err := http.ListenAndServe(port, nil); err != nil {
 		log.Fatalf("Server error: %v", err)
